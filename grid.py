@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import common
 
 class Grid:
     props = {}
@@ -11,26 +12,30 @@ class Grid:
         self.bounds = bounds
         self.deltas = deltas
         self.ndims = bounds.shape[0]
+        if (self.ndims == 1):
+            self.mode = common.MODE_1D
+        elif (self.ndims == 2):
+            self.mode = common.MODE_2D
 
         bounds_x = bounds[0]
-        self.Nx = (bounds_x[1] - bounds_x[0]) / deltas[0]
+        self.Nx = ((bounds_x[1] - bounds_x[0]) + 1) / deltas[0]
         num_nodes = self.Nx
         node_dims = [self.Nx]
 
         if (self.ndims > 1):
             bounds_y = bounds[1]
-            self.Ny = (bounds_y[1] - bounds_y[0]) / deltas[1]
+            self.Ny = ((bounds_y[1] - bounds_y[0]) + 1) / deltas[1]
             num_nodes *= self.Ny
             node_dims.append(self.Ny)
 
         if (self.ndims > 2):
             bounds_z = bounds[2]
-            self.Nz = (bounds_z[1] - bounds_z[0]) / deltas[2]
+            self.Nz = ((bounds_z[1] - bounds_z[0]) + 1) / deltas[2]
             num_nodes *= self.Nz
             node_dims.append(self.Nz)
 
         num_nodes = int(num_nodes)
-        self.N = np.array(node_dims)
+        self.N = np.array(node_dims, dtype=np.int)
         self.num_nodes = num_nodes
 
         for prop in props:

@@ -4,9 +4,8 @@ from abc import ABC, abstractmethod
 from typing import List
 import operations as op
 from grid import Grid
+import common
 
-USF = 'USF'
-USL = 'USL'
 
 class MaterialPoints:
     props = {}
@@ -28,7 +27,7 @@ class MaterialPoints:
 class SimulationParams:
     delta_t = 0.1
     tf = 1.0
-    stress_strategy = USF
+    stress_strategy = common.USF
 
 class SimulationModel:
     grid = None
@@ -74,12 +73,12 @@ class GMPMSimulation(Simulation):
         self.add_step(DiscardPreviousGrid())
         self.add_step(ComputeInterpolationValues())
         self.add_step(InitializeGridState())
-        if (self.sim_params.stress_strategy == USF):
+        if (self.sim_params.stress_strategy == common.USF):
             self.add_step(UpdateStrainStressUSF)
         self.add_step(ComputeInterpolationValues())
         self.add_step(ComputeRateOfMomentumAndUpdateNodes())
         self.add_step(UpdateMaterialPoints())
-        if (self.sim_params.stress_strategy == USL):
+        if (self.sim_params.stress_strategy == common.USL):
             self.add_step(UpdateStrainStressUSL)
 
 class Step(ABC):
