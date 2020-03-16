@@ -34,7 +34,7 @@ def getNp(points_position, grid_deltas, grid_bounds, grid_N):
     np_arr = npx + npy + npz
     return np_arr
 
-@numba.njit
+# TODO define if this is useful
 def _get_rijk3d(npi, grid_N):
     nx, ny = grid_N[0], grid_N[1]
     nxny = nx *ny
@@ -65,13 +65,61 @@ def grid_support_indexes(np_arr, grid_N, grid_mode, arr_out):
                 arr_out[ele][r] = index_row[c]
                 r += 1
 
-if (__name__ == '__main__'):
-    mat_point_position = np.array([(2.3, 2.3 ), (1, 1)])
-    grid = Grid(bounds=np.array([(0, 5), (0, 5)]), deltas=np.array([1, 1]), props={ 'mass': 1, 'momentum': 1 })
-    np_arr = getNp(mat_point_position, grid.deltas, grid.bounds, grid.N)
-    print(getNp(mat_point_position, grid.deltas, grid.bounds, grid.N))
-    print(grid.N)
+@numba.njit
+def snp(xp, xn, lp, L):
+    #L is grid delta
+    #lp
+    d = (xp - xn)
 
-    arr_out = np.zeros((np_arr.shape[0], 16))
-    print(grid_support_indexes(np_arr, grid.N, grid.mode, arr_out))
-    print (arr_out)
+    if d <= -L -lp:
+        Snp = 0.0
+    elif d <= -L + lp:
+        Snp = ((L + lp + d) ** 2.0) / (4.0 * L * lp)
+    elif d <= -lp:
+        Snp = 1.0 + d/L
+    elif d<= lp:
+        Snp = 1.0-(d*d+lp*lp)/(2.0*L*lp)
+    elif d<= L-lp:
+        Snp = 1.0 - d/L
+    elif d<= L + lp:
+        Snp = ((L + lp - d) ** 2.0) / (4.0 * L * lp)
+    else:
+        Snp = 0.0
+
+    return Snp
+
+@numba.njit
+def calc_Snp(xn, xp, lp, L):
+    """Returns Grid shape function Snp value"""
+    Snp = 1.0
+    for i in range(xp.shape[0]):
+        xin, xip = xn[i], xp[i]
+        Snp *= snp(xip, xin, lp, L)
+    return Snp
+
+@numba.njit
+def calc_Snp_arr(xn_arr, xp_arr, lp, L, arr_out):
+    for p in range(xp_arr.shape[0]):
+        xn = xn_arr[p]
+        xp = xp_arr[p]
+        arr_out[p] = calc_Snp(xn, xp, lp, L)
+
+@numba.njit
+def gnp(xp, xn, lp, L):
+    d = (xp - xn)
+
+    if d<=-L-lp: Gnp = 0.0
+    elif d>L+lp: Gnp = 0.0
+    elif d<=-L+lp: Gnp = (L+d+lp)/(2.0*L*lp)
+    elif d<=-lp: Gnp = 1.0/L
+    elif d<=lp: Gnp = -d/(L*lp)
+    elif d<=L-lp: Gnp = -1.0/L
+    else:        Gnp = (-L+d-lp)/(2.0*L*lp)
+    return Gnp
+
+@numba.njit
+def calc_Gnp(xn, xp, lp, L, Gnp):
+    for i in range(xp.shape[0]):
+        xin, xip = xn[i], xp[i]
+        Gnp[i]= gnp(xip, xin, lp, L) #TODO not sure about this. Gradient should be grad(f) = d(f)/dx + d(f)/dy + d(f)/dz
+    return Gnp

@@ -7,6 +7,7 @@ class Grid:
     Nx = 0
     Ny = 0
     Nz = 0
+    L = 0
 
     def __init__(self, bounds, deltas, props):
         self.bounds = bounds
@@ -37,17 +38,18 @@ class Grid:
         num_nodes = int(num_nodes)
         self.N = np.array(node_dims, dtype=np.int)
         self.num_nodes = num_nodes
+        self.L = deltas[0]
 
         for prop in props:
-            self.add_node_property(prop, float, props[prop])
+            self.add_node_property_storage(prop, float, props[prop])
 
-    def add_node_property(self, name, dtype, nelems=1):
+    def add_node_property_storage(self, name, dtype, nelems=1):
         propShape = (self.num_nodes, nelems)
-        self.props[name] = np.zeros(propShape, dtype=dtype)
+        self.storage[name] = np.zeros(propShape, dtype=dtype)
 
     def reset(self):
-        for propName in self.props:
-            self.props[propName].fill(0)
+        for propName in self.storage:
+            self.storage[propName].fill(0)
 
 
 if (__name__ == '__main__'):

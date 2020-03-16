@@ -1,28 +1,30 @@
-import numpy as np
-import numba
 from abc import ABC, abstractmethod
 from typing import List
-import operations as op
-from grid import Grid
+import numpy as np
+import numba
 import common
+import steps
+from grid import Grid
 
 
 class MaterialPoints:
-    props = {}
+    storage = {}
+    lp = 0
 
-    def __init__(self, points, props):
+    def __init__(self, points, spec):
         self.num_points = points.shape[0]
 
-        for prop in props:
-            self.add_material_property(prop, float, props[prop])
+        for prop in spec.props:
+            self.add_material_property_storage(prop, float, spec[prop])
 
+        self.lp = spec.lp
         for i, point in enumerate(points):
-            for prop in props:
-                self.props[prop][i] = point[prop]
+            for prop in spec:
+                self.storage[prop][i] = point[prop]
 
-    def add_material_property(self, name, dtype, nelems=1):
+    def add_material_property_storage(self, name, dtype, nelems=1):
         propShape = (self.num_points, nelems)
-        self.props[name] = np.zeros(propShape, dtype=dtype)
+        self.storage[name] = np.zeros(propShape, dtype=dtype)
 
 class SimulationParams:
     delta_t = 0.1
@@ -70,100 +72,13 @@ class Simulation(ABC):
 class GMPMSimulation(Simulation):
 
     def setup_simulation(self):
-        self.add_step(DiscardPreviousGrid())
-        self.add_step(ComputeInterpolationValues())
-        self.add_step(InitializeGridState())
+        self.add_step(steps.DiscardPreviousGrid())
+        self.add_step(steps.ComputeInterpolationValues())
+        self.add_step(steps.InitializeGridState())
         if (self.sim_params.stress_strategy == common.USF):
-            self.add_step(UpdateStrainStressUSF)
-        self.add_step(ComputeInterpolationValues())
-        self.add_step(ComputeRateOfMomentumAndUpdateNodes())
-        self.add_step(UpdateMaterialPoints())
+            self.add_step(steps.UpdateStrainStressUSF)
+        self.add_step(steps.ComputeInterpolationValues())
+        self.add_step(steps.ComputeRateOfMomentumAndUpdateNodes())
+        self.add_step(steps.UpdateMaterialPoints())
         if (self.sim_params.stress_strategy == common.USL):
-            self.add_step(UpdateStrainStressUSL)
-
-class Step(ABC):
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def execute(self, model):
-        pass
-
-class DiscardPreviousGrid(Step):
-
-    def execute(self, model: SimulationModel):
-        model.grid.reset()
-
-class ComputeInterpolationValues(Step):
-
-    def execute(self, model: SimulationModel):
-        mat_point_position = model.material_points.props['position']
-        grid = model.grid
-        op.getNp(mat_point_position, grid.deltas, grid.bounds, grid.N)
-
-class InitializeGridState(Step):
-
-    def execute(self):
-        pass
-
-class UpdateStrainStressUSF(Step):
-
-    def execute(self):
-        pass
-
-class ComputeInternalAndExternalForces(Step):
-
-    def execute(self):
-        pass
-
-class ComputeRateOfMomentumAndUpdateNodes(Step):
-
-    def execute(self):
-        pass
-
-class UpdateMaterialPoints(Step):
-
-    def execute(self):
-        pass
-
-class UpdateStrainStressUSL(Step):
-
-    def execute(self):
-        pass
-
-if (__name__ == '__main__'):
-    ####
-    material_points_props = {
-        'position': 1,
-        'mass': 1,
-        'velocity': 1,
-        'strain': 1,
-        'stress': 1,
-        'body_masses': 1,
-    }
-
-    material_points_input = np.array([{
-        'position': 2,
-        'mass': 1,
-        'velocity': 1,
-        'strain': 1,
-        'stress': 1,
-        'body_masses': 1,
-    }])
-    grid_nodes_props = {
-        'position': 1,
-        'mass': 1,
-        'momentum': 1,
-        'internal_force': 1,
-        'external_force': 1,
-        'rate_of_momenta': 1
-    }
-    ###
-
-    material_points = MaterialPoints(material_points_input, material_points_props)
-    grid = Grid(bounds=np.array([(1, 10)]), deltas=np.array([1]), props=grid_nodes_props)
-    model = SimulationModel(grid, material_points)
-    params = SimulationParams()
-
-    simulation = GMPMSimulation()
-    # simulation.run(params, model)
+            self.add_step(steps.UpdateStrainStressUSL)
