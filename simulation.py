@@ -26,12 +26,10 @@ class MaterialPoints:
         propShape = (self.num_points, nelems)
         self.storage[name] = np.zeros(propShape, dtype=dtype)
 
-class SimulationParams:
+class SimulationModel:
     delta_t = 0.1
     tf = 1.0
     stress_strategy = common.USF
-
-class SimulationModel:
     grid = None
     material_points = None
 
@@ -41,23 +39,21 @@ class SimulationModel:
 
 class Simulation(ABC):
     steps = []
-    sim_params: SimulationParams = None
-    sim_model: SimulationModel = None
+    simulation_model: SimulationModel = None
     t = 0
 
     def __init__(self):
         pass
 
-    def run(self, simulation_params: SimulationParams, simulation_model: SimulationModel):
-        self.initialize(simulation_params, simulation_model)
+    def run(self, simulation_model: SimulationModel):
+        self.initialize(simulation_model)
 
-        while(self.t < self.sim_params.tf):
+        while(self.t < self.simulation_model.tf):
             for step in self.steps:
                 step.execute(self)
-            self.t += self.sim_params.delta_t
+            self.t += self.simulation_model.delta_t
 
-    def initialize(self, simulation_params: SimulationParams, simulation_model: SimulationModel):
-        self.sim_params = simulation_params
+    def initialize(self, simulation_model: SimulationModel):
         self.sim_model = simulation_model
         self.t = 0
         self.setup_simulation()
@@ -75,10 +71,10 @@ class GMPMSimulation(Simulation):
         self.add_step(steps.DiscardPreviousGrid())
         self.add_step(steps.ComputeInterpolationValues())
         self.add_step(steps.InitializeGridState())
-        if (self.sim_params.stress_strategy == common.USF):
+        if (self.simulation_model.stress_strategy == common.USF):
             self.add_step(steps.UpdateStrainStressUSF)
         self.add_step(steps.ComputeInterpolationValues())
         self.add_step(steps.ComputeRateOfMomentumAndUpdateNodes())
         self.add_step(steps.UpdateMaterialPoints())
-        if (self.sim_params.stress_strategy == common.USL):
+        if (self.simulation_model.stress_strategy == common.USL):
             self.add_step(steps.UpdateStrainStressUSL)
