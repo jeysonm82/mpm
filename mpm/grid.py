@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import common
+import mpm.common.constants as c
 
 class Grid:
     props = {}
@@ -8,15 +8,16 @@ class Grid:
     Ny = 0
     Nz = 0
     L = 0
+    storage = {}
 
     def __init__(self, bounds, deltas, props):
         self.bounds = bounds
         self.deltas = deltas
         self.ndims = bounds.shape[0]
         if (self.ndims == 1):
-            self.mode = common.MODE_1D
+            self.mode = c.MODE_1D
         elif (self.ndims == 2):
-            self.mode = common.MODE_2D
+            self.mode = c.MODE_2D
 
         bounds_x = bounds[0]
         self.Nx = ((bounds_x[1] - bounds_x[0]) + 1) / deltas[0]

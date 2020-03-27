@@ -1,6 +1,6 @@
 import numpy as np
-from grid import Grid
-from simulation import SimulationModel, SimulationParams, GMPMSimulation, MaterialPoints
+from mpm.grid import Grid
+from mpm.simulation import SimulationModel, GMPMSimulation, MaterialPoints
 
 if (__name__ == '__main__'):
     ####
@@ -37,7 +37,6 @@ if (__name__ == '__main__'):
     material_points = MaterialPoints(material_points_input, material_points_spec)
     grid = Grid(bounds=np.array([(1, 10)]), deltas=np.array([1]), props=grid_nodes_props)
     model = SimulationModel(grid, material_points)
-    params = SimulationParams()
 
     simulation = GMPMSimulation()
     # simulation.run(params, model)

@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
-from grid import Grid
-from operations import getNp, grid_support_indexes
+from mpm.grid import Grid
+from mpm.steps.operations import getNp, grid_support_indexes
 
 class TestOperations(unittest.TestCase):
 

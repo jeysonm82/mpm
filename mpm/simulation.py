@@ -2,40 +2,11 @@ from abc import ABC, abstractmethod
 from typing import List
 import numpy as np
 import numba
-import common
-import steps
-from grid import Grid
+import mpm.common.constants as c
+import mpm.steps as steps
+from mpm.grid import Grid
+from mpm.input import SimulationModel,  MaterialPoints
 
-
-class MaterialPoints:
-    storage = {}
-    lp = 0
-
-    def __init__(self, points, spec):
-        self.num_points = points.shape[0]
-
-        for prop in spec.props:
-            self.add_material_property_storage(prop, float, spec[prop])
-
-        self.lp = spec.lp
-        for i, point in enumerate(points):
-            for prop in spec:
-                self.storage[prop][i] = point[prop]
-
-    def add_material_property_storage(self, name, dtype, nelems=1):
-        propShape = (self.num_points, nelems)
-        self.storage[name] = np.zeros(propShape, dtype=dtype)
-
-class SimulationModel:
-    delta_t = 0.1
-    tf = 1.0
-    stress_strategy = common.USF
-    grid = None
-    material_points = None
-
-    def __init__(self, grid: Grid, material_points):
-        self.grid = grid
-        self.material_points = material_points
 
 class Simulation(ABC):
     steps = []
@@ -71,10 +42,10 @@ class GMPMSimulation(Simulation):
         self.add_step(steps.DiscardPreviousGrid())
         self.add_step(steps.ComputeInterpolationValues())
         self.add_step(steps.InitializeGridState())
-        if (self.simulation_model.stress_strategy == common.USF):
+        if (self.simulation_model.stress_strategy == c.USF):
             self.add_step(steps.UpdateStrainStressUSF)
         self.add_step(steps.ComputeInterpolationValues())
         self.add_step(steps.ComputeRateOfMomentumAndUpdateNodes())
         self.add_step(steps.UpdateMaterialPoints())
-        if (self.simulation_model.stress_strategy == common.USL):
+        if (self.simulation_model.stress_strategy == c.USL):
             self.add_step(steps.UpdateStrainStressUSL)

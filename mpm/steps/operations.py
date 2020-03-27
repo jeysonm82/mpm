@@ -1,8 +1,7 @@
 import numba
 import numpy as np
-from grid import Grid
-import common
-from common import MODE_2D, MODE_1D
+from mpm.grid import Grid
+from mpm.common.constants import MODE_1D, MODE_2D
 
 @numba.njit
 def getNp(points_position, grid_deltas, grid_bounds, grid_N):
