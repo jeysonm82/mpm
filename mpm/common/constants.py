@@ -1,6 +1,0 @@
-MODE_1D = 'MODE_1D'
-MODE_2D = 'MODE_2D'
-# MODE_3D = 'MODE_3D'
-
-USF = 'USF'
-USL = 'USL'
